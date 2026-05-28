@@ -40,10 +40,29 @@ Após o primeiro push em `back` e `front`, as imagens aparecem em:
 - `ghcr.io/winceroliveira/gerenciamentoclientes_back:latest`
 - `ghcr.io/winceroliveira/gerenciamentoclientes_front:latest`
 
-Se os pacotes forem **privados** (padrão em repo privado):
+Se os pacotes forem **privados** (padrão em repo privado) — erro comum: `ghcr.io ... unauthorized`:
 
-1. GitHub → **Settings** → **Packages** → cada pacote → **Package settings** → **Change visibility** (public), **ou**
-2. Portainer → **Registries** → **Add registry** → GitHub (`ghcr.io`) com PAT (`read:packages`).
+**Opção A — Pacotes públicos (mais simples)**
+
+1. https://github.com/winceroliveira?tab=packages  
+2. Abra `gerenciamentoclientes_back` → **Package settings** → **Change visibility** → **Public**  
+3. Repita para `gerenciamentoclientes_front`  
+4. No Portainer: **Stacks** → `progplay` → **Pull and redeploy** (ou deploy de novo)
+
+**Opção B — Registry no Portainer (mantém privado)**
+
+1. GitHub → **Settings** → **Developer settings** → **Personal access tokens** → **Generate new token (classic)**  
+2. Marque: `read:packages` (e `repo` se repo for privado)  
+3. Portainer → **Registries** → **Add registry**  
+   - **Registry provider:** Custom  
+   - **Name:** `GHCR`  
+   - **Registry URL:** `ghcr.io`  
+   - **Username:** `winceroliveira`  
+   - **Password:** o PAT (não a senha do GitHub)  
+4. Ao criar/editar a stack, em **Registry** selecione `GHCR` (ou marque usar registry padrão)  
+5. **Redeploy**
+
+> Autenticação do **repositório Git** (compose) é separada da autenticação do **GHCR** (imagens Docker).
 
 ---
 
