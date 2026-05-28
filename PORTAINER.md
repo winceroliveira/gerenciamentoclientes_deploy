@@ -55,7 +55,7 @@ O PAT na stack (**Repository → Authentication**) serve só para clonar o `dock
 O pull das imagens usa **outro** login: **Registries**.
 
 1. GitHub → **Settings** → **Developer settings** → **Personal access tokens**  
-2. Crie token **classic** (fine-grained costuma falhar no Docker) com:
+2. **Não use só fine-grained “repository-scoped”** — precisa permissão **Packages: Read** no token, ou use token **classic** com:
    - `read:packages` (obrigatório)
    - `repo` (se os repos forem privados)
 3. Portainer → menu **Registries** (não dentro da stack) → **Add registry**
@@ -84,6 +84,15 @@ docker pull ghcr.io/winceroliveira/gerenciamentoclientes_front:latest
 
 Se `pull` funcionar no SSH mas falhar no Portainer, o registry não está ligado ao ambiente — revise passo 5.
 
+### Erro `denied` (autenticou mas sem permissão)
+
+| Causa | Correção |
+|-------|----------|
+| Token fine-grained **sem** Packages Read | Editar token → Permissions → **Packages: Read** nos dois pacotes, ou criar token **classic** com `read:packages` |
+| Registry `GIT` com senha antiga | **Registries** → editar `GIT` → colar PAT novo → salvar → **Update stack** |
+| `nginx-gateway.conf` not a directory | Compose usa `configs:` embutido; remova stack antiga se falhou antes (pasta fantasma em `/data/compose/`) |
+| Token “Never used” | Credencial do registry nunca funcionou — refaça `docker login` no SSH |
+
 > Autenticação do **repositório Git** (compose) é separada da autenticação do **GHCR** (imagens Docker).
 
 ---
@@ -97,6 +106,7 @@ Se `pull` funcionar no SSH mas falhar no Portainer, o registry não está ligado
 | **Repository URL** | `https://github.com/winceroliveira/gerenciamentoclientes_deploy` |
 | **Repository reference** | `refs/heads/main` |
 | **Compose path** | `docker-compose.yml` |
+| **Additional paths** | não necessário (nginx está dentro do compose) |
 | **Authentication** | Ligado se o repo deploy for privado (PAT ou usuário/senha) |
 | **GitOps updates** | Opcional — útil se você alterar só o `docker-compose`; para código use o **webhook** |
 
