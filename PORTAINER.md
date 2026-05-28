@@ -66,7 +66,7 @@ Adicione manualmente (não commite segredos):
 | Nome | Exemplo |
 |------|---------|
 | `JWT_SECRET` | string longa aleatória |
-| `PUBLIC_URL` | `https://gerenciamento.seudominio.com.br` |
+| `PUBLIC_URL` | `https://www.progplay.com.br` |
 | `CORS_ORIGIN` | igual ao `PUBLIC_URL` |
 | `HTTP_PORT` | `8080` |
 
@@ -126,3 +126,67 @@ Combinação ideal:
 - [ ] `JWT_SECRET` e URLs no Portainer
 - [ ] Secret `PORTAINER_STACK_WEBHOOK` nos dois repos de código
 - [ ] Teste: push em `main` → Action → stack redeploy → site responde
+
+---
+
+## Domínio progplay.com.br (site na raiz www)
+
+O frontend já separa rotas:
+
+| URL | Página |
+|-----|--------|
+| `https://www.progplay.com.br/` | Site público (orçamentos) |
+| `https://www.progplay.com.br/admin` | Painel administrativo |
+
+### DNS na Hostinger (progplay.com.br)
+
+| Tipo | Nome | Aponta para | Observação |
+|------|------|------------|------------|
+| **A** | `@` | `168.231.97.170` | Raiz `progplay.com.br` → VPS |
+| **CNAME** | `www` | `progplay.com.br` | Já existe — passa a resolver para a VPS junto com o `@` |
+
+Não remova registros de **e-mail** (TXT/CNAME `hostingermail`, `autodiscover`, etc.).
+
+Aguarde propagação e teste: `nslookup www.progplay.com.br` → `168.231.97.170`.
+
+> Se antes existia site da Hostinger na raiz, ele deixa de ser servido de lá e passa a ser este sistema na VPS.
+
+### Nginx Proxy Manager
+
+**Proxy Hosts → Add Proxy Host**
+
+**Details**
+
+| Campo | Valor |
+|-------|--------|
+| Domain Names | `www.progplay.com.br`, `progplay.com.br` |
+| Scheme | `http` |
+| Forward Hostname / IP | `168.231.97.170` |
+| Forward Port | `8080` |
+| Websockets Support | ligado |
+
+**SSL**
+
+- Request a new SSL Certificate (Let's Encrypt)
+- Force SSL + HTTP/2
+
+Assim `https://progplay.com.br` e `https://www.progplay.com.br` funcionam com o mesmo certificado.
+
+**Redirect opcional (só www):** em **Advanced** do NPM, custom location ou segundo proxy só para redirecionar `progplay.com.br` → `www` — só necessário se quiser URL canônica única.
+
+### Portainer (stack progplay-gerenciamento)
+
+```
+PUBLIC_URL=https://www.progplay.com.br
+CORS_ORIGIN=https://www.progplay.com.br
+HTTP_PORT=8080
+JWT_SECRET=<sua-chave>
+```
+
+**Update the stack** após alterar.
+
+### Testes finais
+
+- https://www.progplay.com.br
+- https://www.progplay.com.br/admin
+- https://www.progplay.com.br/health
