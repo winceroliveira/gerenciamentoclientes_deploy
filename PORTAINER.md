@@ -119,18 +119,16 @@ Se `pull` funcionar no SSH mas falhar no Portainer, o registry não está ligado
 
 Se `gateway` não mostra `8080`, remova a stack e recrie com o compose atual (sem `container_name`).
 
-### NPM na mesma VM (rede n8nwpp)
+### NPM na mesma VM
 
-O compose conecta o `gateway` à rede **`n8nwpp_default`** (stack do n8n/NPM). No NPM você pode usar:
+Use **IP + porta** (rede externa não é obrigatória no compose):
 
-| Campo | Valor alternativo |
-|-------|-------------------|
-| Forward Hostname | `gateway` |
-| Forward Port | `80` |
+| Campo | Valor |
+|-------|--------|
+| Forward Hostname / IP | `168.231.97.170` |
+| Forward Port | `8080` |
 
-(só funciona se NPM e progplay compartilham a rede — já configurado no compose)
-
-Confirme o nome da rede no SSH: `docker network ls | grep n8n`
+Opcional (rede Docker interna): no SSH rode `docker network ls`, ache a rede do stack n8n/NPM e adicione no compose uma rede `external` com o **nome exato** — ex.: pode ser `n8nwpp_default`, `n8n_default`, etc.
 | **Authentication** | Ligado se o repo deploy for privado (PAT ou usuário/senha) |
 | **GitOps updates** | Opcional — útil se você alterar só o `docker-compose`; para código use o **webhook** |
 

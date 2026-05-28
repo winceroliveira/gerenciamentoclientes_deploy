@@ -46,14 +46,10 @@ services:
       - web
     networks:
       - progplay
-      - n8nwpp
 
 networks:
   progplay:
     name: progplay-gerenciamento
-  n8nwpp:
-    external: true
-    name: n8nwpp_default
 
 volumes:
   progplay_sqlite:
