@@ -1,6 +1,6 @@
 # Stack ProgPlay — Portainer
-# SQLite: volume "progplay-sqlite-data" (arquivo /data/app.db dentro do container api)
-# api/web NÃO expõem porta no host — só gateway :8080
+# SQLite: volume progplay-sqlite-data (dentro do container api)
+# Gateway: imagem propria (configs: quebrava ports no Portainer)
 
 services:
   api:
@@ -34,13 +34,12 @@ services:
       - progplay
 
   gateway:
-    image: nginx:1.27-alpine
+    image: ghcr.io/winceroliveira/gerenciamentoclientes_deploy-gateway:latest
     restart: unless-stopped
     ports:
-      - '8080:80'
-    configs:
-      - source: nginx_gateway_conf
-        target: /etc/nginx/conf.d/default.conf
+      - target: 80
+        published: 8080
+        protocol: tcp
     depends_on:
       - api
       - web
@@ -54,48 +53,3 @@ networks:
 volumes:
   progplay_sqlite:
     name: progplay-sqlite-data
-
-configs:
-  nginx_gateway_conf:
-    content: |
-      server {
-          listen 80;
-          server_name _;
-          client_max_body_size 10m;
-
-          location /health {
-              proxy_pass http://api:3000/health;
-              proxy_http_version 1.1;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-          }
-
-          location /api {
-              proxy_pass http://api:3000/api;
-              proxy_http_version 1.1;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-          }
-
-          location /webhooks {
-              proxy_pass http://api:3000/webhooks;
-              proxy_http_version 1.1;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-          }
-
-          location / {
-              proxy_pass http://web:80;
-              proxy_http_version 1.1;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-          }
-      }
