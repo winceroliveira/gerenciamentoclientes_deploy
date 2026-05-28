@@ -51,16 +51,38 @@ Se os pacotes forem **privados** (padrão em repo privado) — erro comum: `ghcr
 
 **Opção B — Registry no Portainer (mantém privado)**
 
-1. GitHub → **Settings** → **Developer settings** → **Personal access tokens** → **Generate new token (classic)**  
-2. Marque: `read:packages` (e `repo` se repo for privado)  
-3. Portainer → **Registries** → **Add registry**  
-   - **Registry provider:** Custom  
-   - **Name:** `GHCR`  
-   - **Registry URL:** `ghcr.io`  
-   - **Username:** `winceroliveira`  
-   - **Password:** o PAT (não a senha do GitHub)  
-4. Ao criar/editar a stack, em **Registry** selecione `GHCR` (ou marque usar registry padrão)  
-5. **Redeploy**
+O PAT na stack (**Repository → Authentication**) serve só para clonar o `docker-compose.yml`.  
+O pull das imagens usa **outro** login: **Registries**.
+
+1. GitHub → **Settings** → **Developer settings** → **Personal access tokens**  
+2. Crie token **classic** (fine-grained costuma falhar no Docker) com:
+   - `read:packages` (obrigatório)
+   - `repo` (se os repos forem privados)
+3. Portainer → menu **Registries** (não dentro da stack) → **Add registry**
+
+| Campo | Valor |
+|-------|--------|
+| Registry provider | Custom |
+| Name | `GHCR` |
+| Registry URL | `ghcr.io` (sem `https://`) |
+| Username | `winceroliveira` |
+| Password | o PAT `ghp_...` inteiro |
+
+4. **Test connection** (se o botão existir) ou teste na VM (abaixo)  
+5. **Environments** → seu ambiente local → **Registries** → confirme que `GHCR` está disponível  
+6. **Stacks** → `progplay` → **Editor** → **Update the stack** (ou delete e crie de novo)
+
+Se criou a stack **antes** do registry, o deploy antigo não “herda” credencial — precisa **Update** ou recriar.
+
+**Teste na VM (SSH):**
+
+```bash
+echo "COLE_SEU_PAT_AQUI" | docker login ghcr.io -u winceroliveira --password-stdin
+docker pull ghcr.io/winceroliveira/gerenciamentoclientes_back:latest
+docker pull ghcr.io/winceroliveira/gerenciamentoclientes_front:latest
+```
+
+Se `pull` funcionar no SSH mas falhar no Portainer, o registry não está ligado ao ambiente — revise passo 5.
 
 > Autenticação do **repositório Git** (compose) é separada da autenticação do **GHCR** (imagens Docker).
 
