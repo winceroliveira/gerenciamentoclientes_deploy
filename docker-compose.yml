@@ -1,14 +1,10 @@
-# Stack única — ProgPlay Gerenciamento de Clientes
-# Imagens publicadas pelo GitHub Actions (GHCR).
-# Config nginx embutida (Portainer Git não baixa arquivos extras por bind mount).
-
-name: progplay-gerenciamento
+# Stack ProgPlay — Portainer
+# SQLite: volume "progplay-sqlite-data" (arquivo /data/app.db dentro do container api)
+# api/web NÃO expõem porta no host — só gateway :8080
 
 services:
   api:
-    container_name: progplay-api
     image: ghcr.io/winceroliveira/gerenciamentoclientes_back:latest
-    pull_policy: always
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -29,9 +25,7 @@ services:
       start_period: 15s
 
   web:
-    container_name: progplay-web
     image: ghcr.io/winceroliveira/gerenciamentoclientes_front:latest
-    pull_policy: always
     restart: unless-stopped
     depends_on:
       api:
@@ -40,11 +34,10 @@ services:
       - progplay
 
   gateway:
-    container_name: progplay-gateway
     image: nginx:1.27-alpine
     restart: unless-stopped
     ports:
-      - '0.0.0.0:8080:80'
+      - '8080:80'
     configs:
       - source: nginx_gateway_conf
         target: /etc/nginx/conf.d/default.conf
@@ -53,10 +46,14 @@ services:
       - web
     networks:
       - progplay
+      - n8nwpp
 
 networks:
   progplay:
     name: progplay-gerenciamento
+  n8nwpp:
+    external: true
+    name: n8nwpp_default
 
 volumes:
   progplay_sqlite:
@@ -68,7 +65,6 @@ configs:
       server {
           listen 80;
           server_name _;
-
           client_max_body_size 10m;
 
           location /health {

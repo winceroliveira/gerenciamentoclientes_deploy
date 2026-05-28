@@ -106,7 +106,31 @@ Se `pull` funcionar no SSH mas falhar no Portainer, o registry não está ligado
 | **Repository URL** | `https://github.com/winceroliveira/gerenciamentoclientes_deploy` |
 | **Repository reference** | `refs/heads/main` |
 | **Compose path** | `docker-compose.yml` |
-| **Additional paths** | não necessário (nginx está dentro do compose) |
+| **Additional paths** | não necessário (nginx embutido em `configs:`) |
+
+### Portas e banco — o que é normal
+
+| O que você vê | Normal? |
+|---------------|---------|
+| `api` e `web` **sem** porta publicada no host | **Sim** — ficam só na rede Docker interna |
+| `gateway` **com** `8080:80` | **Obrigatório** — se não aparecer, a stack está errada |
+| **Nenhum** container `postgres` | **Sim** — usamos **SQLite** no volume `progplay-sqlite-data` |
+| Volume `progplay-sqlite-data` em **Volumes** | **Sim** — é o “banco” (arquivo `app.db`) |
+
+Se `gateway` não mostra `8080`, remova a stack e recrie com o compose atual (sem `container_name`).
+
+### NPM na mesma VM (rede n8nwpp)
+
+O compose conecta o `gateway` à rede **`n8nwpp_default`** (stack do n8n/NPM). No NPM você pode usar:
+
+| Campo | Valor alternativo |
+|-------|-------------------|
+| Forward Hostname | `gateway` |
+| Forward Port | `80` |
+
+(só funciona se NPM e progplay compartilham a rede — já configurado no compose)
+
+Confirme o nome da rede no SSH: `docker network ls | grep n8n`
 | **Authentication** | Ligado se o repo deploy for privado (PAT ou usuário/senha) |
 | **GitOps updates** | Opcional — útil se você alterar só o `docker-compose`; para código use o **webhook** |
 
