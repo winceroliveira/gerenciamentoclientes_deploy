@@ -6,14 +6,14 @@
 |----------|----------|
 | Uma stack por repositório? | **Não.** Use **1 stack** (`progplay-gerenciamento`) apontando para o repo **`gerenciamentoclientes_deploy`**. |
 | O que os outros repos fazem? | `back` e `front` publicam **imagens Docker** no GHCR via Actions. |
-| Como atualiza na VM? | Action chama o **webhook** da stack no Portainer (pull das imagens `:latest`). |
+| Como atualiza na VM? | Action chama a **API** do Portainer CE (redeploy + pull das imagens `:latest`). |
 
 ```
 ┌─────────────────┐     push main      ┌──────────────────┐
 │ back / front    │ ─────────────────► │ GitHub Actions   │
 │ (código)        │                    │ build + GHCR     │
 └─────────────────┘                    └────────┬─────────┘
-                                                │ POST webhook
+                                                │ PUT API redeploy
                                                 ▼
 ┌─────────────────┐     compose + env  ┌──────────────────┐
 │ gerenciamentoclientes_deploy          │ Portainer        │
@@ -130,7 +130,7 @@ Use **IP + porta** (rede externa não é obrigatória no compose):
 
 Opcional (rede Docker interna): no SSH rode `docker network ls`, ache a rede do stack n8n/NPM e adicione no compose uma rede `external` com o **nome exato** — ex.: pode ser `n8nwpp_default`, `n8n_default`, etc.
 | **Authentication** | Ligado se o repo deploy for privado (PAT ou usuário/senha) |
-| **GitOps updates** | Opcional — útil se você alterar só o `docker-compose`; para código use o **webhook** |
+| **GitOps updates** | Opcional — útil se você alterar só o `docker-compose`; para código use a **API Portainer** |
 
 ### Environment variables (na mesma tela)
 
