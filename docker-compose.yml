@@ -1,6 +1,7 @@
 # Stack ProgPlay — Portainer
 # SQLite: volume progplay-sqlite-data (dentro do container api)
 # Gateway: imagem propria (configs: quebrava ports no Portainer)
+# GitOps: Portainer sincroniza este repo quando o compose mudar
 
 services:
   api:
