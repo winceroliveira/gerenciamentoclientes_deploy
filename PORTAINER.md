@@ -147,22 +147,57 @@ Clique em **Deploy the stack**.
 
 ---
 
-## Passo 4 — Webhook para automação (recomendado)
+## Passo 4 — Redeploy automático (Community Edition)
 
-1. Portainer → **Stacks** → `progplay-gerenciamento`
-2. Abra **Webhook** (ou **Service** → webhook da stack)
-3. Copie a URL (algo como `https://seu-portainer:9443/api/stacks/webhooks/xxxx`)
+> **Webhook de stack** só existe no **Portainer Business**. No CE, use a **API** com access token.
 
-No GitHub, em **ambos** os repos `gerenciamentoclientes_back` e `gerenciamentoclientes_front`:
+### 4.1 — IDs da stack
 
-1. **Settings** → **Secrets and variables** → **Actions**
-2. New secret: `PORTAINER_STACK_WEBHOOK` = URL copiada
+Abra a stack **progplay** no Portainer e copie da URL do navegador:
+
+```
+https://168.231.97.170:9443/#!/3/docker/stacks/progplay?id=25&...
+                              ↑ endpoint ID              ↑ stack ID
+```
+
+| Campo | Exemplo (sua VM) |
+|-------|------------------|
+| `PORTAINER_ENDPOINT_ID` | `3` |
+| `PORTAINER_STACK_ID` | `25` |
+
+### 4.2 — Access token
+
+1. Portainer → **My account** → **Access tokens** → **Add access token**
+2. Copie o token (`ptr_...`)
+
+### 4.3 — Secrets no GitHub
+
+Em **ambos** os repos `gerenciamentoclientes_back` e `gerenciamentoclientes_front`:
+
+**Settings** → **Secrets and variables** → **Actions**
+
+| Secret | Valor |
+|--------|--------|
+| `PORTAINER_URL` | `https://168.231.97.170:9443` |
+| `PORTAINER_API_TOKEN` | token `ptr_...` |
+| `PORTAINER_STACK_ID` | `25` |
+| `PORTAINER_ENDPOINT_ID` | `3` |
 
 A cada push em `main`, o Action:
 
 1. Roda testes + build da imagem
 2. Publica no GHCR
-3. Chama o webhook → Portainer **redeploy** e `pull` das imagens novas
+3. Chama a API → Portainer **redeploy** com **pull** das imagens `:latest`
+
+Teste manual (SSH):
+
+```bash
+curl -sk -X PUT \
+  "https://168.231.97.170:9443/api/stacks/25/git/redeploy?endpointId=3" \
+  -H "X-API-Key: SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"Prune": false, "RepullImageAndRedeploy": true}'
+```
 
 ---
 
@@ -170,22 +205,25 @@ A cada push em `main`, o Action:
 
 Nenhum secret obrigatório para publicar no GHCR (usa `GITHUB_TOKEN`).
 
-Opcional:
+Opcional (redeploy automático no CE):
 
 | Secret | Uso |
 |--------|-----|
-| `PORTAINER_STACK_WEBHOOK` | Redeploy automático após push |
+| `PORTAINER_URL` | URL do Portainer |
+| `PORTAINER_API_TOKEN` | Access token |
+| `PORTAINER_STACK_ID` | ID numérico da stack |
+| `PORTAINER_ENDPOINT_ID` | ID do environment (ex.: `3`) |
 
 ---
 
 ## GitOps updates (toggle da sua tela)
 
 - **Ligado:** Portainer verifica o repo **deploy** periodicamente e reaplica se `docker-compose.yml` mudar.
-- **Não substitui** o webhook para atualizar imagens `back`/`front` — para isso use o webhook ou **Pull and redeploy** manual.
+- **Não substitui** a API para atualizar imagens `back`/`front` — para isso use os secrets acima ou **Pull and redeploy** manual.
 
 Combinação ideal:
 
-- **Webhook** → código novo (back/front)
+- **API Portainer** → código novo (back/front)
 - **GitOps** → mudanças de infra (porta, nginx, variáveis no compose)
 
 ---
@@ -197,7 +235,7 @@ Combinação ideal:
 - [ ] Registry configurado no Portainer (se imagens privadas)
 - [ ] **1 stack** criada via Repository
 - [ ] `JWT_SECRET` e URLs no Portainer
-- [ ] Secret `PORTAINER_STACK_WEBHOOK` nos dois repos de código
+- [ ] Secrets Portainer API nos dois repos de código (`URL`, `TOKEN`, `STACK_ID`, `ENDPOINT_ID`)
 - [ ] Teste: push em `main` → Action → stack redeploy → site responde
 
 ---
